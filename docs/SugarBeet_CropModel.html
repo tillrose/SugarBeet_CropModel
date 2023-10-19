@@ -9,7 +9,7 @@
 <meta name="author" content="Agronomy and Crop Science Group, Kiel University">
 <meta name="dcterms.date" content="2023-10-19">
 
-<title>Simulation of Sugar Beet Growth</title>
+<title>SugarBeet_CropModel - Simulation of Sugar Beet Growth</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -44,19 +44,44 @@ div.csl-indent {
 }</style>
 
 
-<script src="SugarBeet_CropModel_files/libs/clipboard/clipboard.min.js"></script>
-<script src="SugarBeet_CropModel_files/libs/quarto-html/quarto.js"></script>
-<script src="SugarBeet_CropModel_files/libs/quarto-html/popper.min.js"></script>
-<script src="SugarBeet_CropModel_files/libs/quarto-html/tippy.umd.min.js"></script>
-<script src="SugarBeet_CropModel_files/libs/quarto-html/anchor.min.js"></script>
-<link href="SugarBeet_CropModel_files/libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="SugarBeet_CropModel_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="SugarBeet_CropModel_files/libs/bootstrap/bootstrap.min.js"></script>
-<link href="SugarBeet_CropModel_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="SugarBeet_CropModel_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
-<script src="SugarBeet_CropModel_files/libs/quarto-diagram/mermaid.min.js"></script>
-<script src="SugarBeet_CropModel_files/libs/quarto-diagram/mermaid-init.js"></script>
-<link href="SugarBeet_CropModel_files/libs/quarto-diagram/mermaid.css" rel="stylesheet">
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="site_libs/quarto-diagram/mermaid.min.js"></script>
+<script src="site_libs/quarto-diagram/mermaid-init.js"></script>
+<link href="site_libs/quarto-diagram/mermaid.css" rel="stylesheet">
 
   <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
@@ -65,8 +90,13 @@ div.csl-indent {
 
 <body class="fullcontent">
 
-<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
-
+<div id="quarto-search-results"></div>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    
+<!-- main -->
 <main class="content" id="quarto-document-content">
 
 <header id="title-block-header" class="quarto-title-block default">
@@ -206,6 +236,8 @@ T_{air} - T_{b} &amp; |~~~T&gt;0 \\
 <h4 class="anchored" data-anchor-id="assumptions-for-non-bolting-winter-beet">Assumptions for non-bolting winter beet</h4>
 <p>As no non-bolting winter beet variety exists at present, it is assumed that the growing phase in autumn/winter can be simulated according to bolting winter beet. After reaching full vernalisation the beet follows the growth pattern of conventional sugar beet in spring.</p>
 
+
+
 </section>
 </section>
 </section>
@@ -218,8 +250,7 @@ Kage, H., Stützel, H., 1999. HUME: An object oriented component library for gen
 <div id="ref-milford1985analysis" class="csl-entry" role="listitem">
 Milford, G., Pocock, T., Riley, J., 1985. An analysis of leaf growth in sugar beet. I. Leaf appearance and expansion in relation to temperature under controlled conditions. Annals of Applied Biology 106, 163–172.
 </div>
-</div></section></div></main>
-<!-- /main column -->
+</div></section></div></main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
   const toggleBodyColorMode = (bsSheetEl) => {
