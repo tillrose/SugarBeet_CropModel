@@ -37,7 +37,7 @@ options("citation_format" = "pandoc")
 
 # The model
 
-A process-orientated dynamic model was developed which runs on daily
+A process-oriented dynamic model was developed which runs on daily
 time steps. Required external data inputs are the mean daily temperature
 \[°C\], precipitation \[mm d^-1^\], global radiation \[W m^-2^\], wind
 speed \[m s^-1^\], relative humidity \[%\] and values derived from these
