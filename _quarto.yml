@@ -1,5 +1,6 @@
 project:
   title: "SugarBeet_CropModel"
+  type: website
   output-dir: docs
   
 editor: visual
