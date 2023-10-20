@@ -12,27 +12,6 @@ chunk_output_type: console
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
 rm(list = ls(all.names = TRUE))
 
-library(rmarkdown)
-library(bookdown)
-library(soilwater)
-library(pracma)
-library(dplyr)
-library(ggplot2)
-library(extrafont)
-library(gifski)
-library(gganimate)
-library(transformr)
-library(reticulate)
-library(tinytex)
-library(magick)
-library(bibtex)
-library(ggsci)
-library(knitcitations)
-library(kableExtra)
-
-options("citation_format" = "pandoc")
-
-
 ```
 
 # The model
