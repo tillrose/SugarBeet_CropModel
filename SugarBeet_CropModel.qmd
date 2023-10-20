@@ -31,15 +31,15 @@ The model was implemented using an object oriented component library termed HUME
 
 The simulation of plant growth is based on an approach using light use efficiency *(LUE~PAR~)* \[g MJ^-1^\] to calculate dry matter production. Leaf area index *(LAI)* \[m^2^ m^-2^\] is thereby used to calculate the intercepted photosynthetic active radiation *(Q)* \[MJ m^-2^\]
 
-$$Q=0.5\cdot {{R}_{global}}\cdot 1-{{e}^{-{{k}_{PAR}}\cdot LAI}}$$
+$$Q = 0.5 \cdot R_{global} \cdot 1 - e^{-k_{PAR} \cdot LAI}$$
 
 where *R~global~* is the global radiation \[MJ m^-2^\] and *k~PAR~* the extinction-coefficient for photosynthetic active radiation \[-\]. *k~PAR~* is assumed to be constant [@andrieu1997ground]. The factor 0.5 reflects the assumption that roughly 50% of the incoming global radiation is photosynthetic active radiation \[MJ m^-2^\] (Szeicz, 1974). The daily total dry matter growth rate \[g m^-2^ d^-1^\] is calculated by multiplying the intercepted radiation *(Q)* with the potenial light use efficiency for photosynthetic active radiation *(LUE~PAR~)* \[g MJ^-1^\] and stress factors for drought stress *(f~droughtLUE~)* \[-\] and for temperature *(f~tempLUE~)* \[-\].
 
-$$\frac{dD{{M}_{total}}}{dt}=Q\cdot LU{{E}_{par}}\cdot {{f}_{droughtLUE}}\cdot {{f}_{tempLUE}}$$
+$$\frac{dDM_{total}} {dt} = Q \cdot LUE_{par} \cdot f_{droughtLUE} \cdot f_{tempLUE}$$
 
 *f~droughtLUE~* describes the reduction of dry matter production if potential transpiration (T\~pot) \[mm d^-1^\] exceeds actual transpiration (T\~act) \[mm d^-1^\].
 
-$${{f}_{droughtLUE}}=\frac{{{T}_{act}}}{{{T}_{pot}}}$$
+$$f_{droughtLUE} = \frac{T_{act}} {T_{pot}}$$
 
 *ftempLUE* describes the reduction of dry matter production due to suboptimal temperature. It follows a trapezoidal optimum function, which can be described by 4 cardinal temperatures (T~b~ = minimum temperature for dry matter production, T~2~ and T~3~ = lower an upper limit of the optimal temperature range, T~4~ = maximum temperature). The values for T~b~-T~4~ for the calculations of *ftempLUE* are obtained from the literature and from experiment 1. Specification of the optimum temperatures for growth processes in sugar beet varies within the literature. Optimum temperature for leaf growth ranges between 19 °C [@milford1980effects] and 24 °C [@terry1968developmental] while that for taproot growth was lower (12 °C [@milford1980effects], 17 °C [@terry1968developmental] or 18 °C [@kenter2006effects]. @vandendriessche2000model uses in his model a temperature optimum from 10 °C to 25 °C for sugar beet assimilation. The lower limit of the temperature optimum was parameterised using the data of experiment 1 and resulted in T~2~ = 15.5 °C. As the upper limit of the temperature optimum is unlikely to be reflected in the experimental data a value of T~3~ = 25 °C was chosen to cover the mostly mentioned optimum temperatures for taproot and leaf growth. T~4~ as upper limit was set to 35 °C according to @vandendriessche2000model.
 
@@ -58,39 +58,41 @@ flowchart LR
 
 Total dry matter *(DM~total~)* \[g m^-2^\] in the model is partitioned into three plant components: root dry matter *(DM~root~)* \[g m^-2^\], petiole dry matter *(DM~petiole~)* \[g m^-2^\] and leaf dry matter *(DM~leaf~)* \[g m^-2^\]. *DM~root~* refers to the storage root of the sugar beets.
 
-$$D{{M}_{total}}=D{{M}_{root}}+D{{M}_{leaf}}+D{{M}_{petiole}}$$
+$$DM_{total} = DM_{root} + DM_{leaf} + DM_{petiole}$$
 
 In the model calculation the growth rate of *DM~total~* is allocated to its components.
 
-$$\frac{dD{{M}_{total}}}{dt}=\frac{dD{{M}_{root}}}{dt}+\frac{dD{{M}_{leaf}}}{dt}+\frac{dD{{M}_{petiole}}}{dt}$$
+$$\frac{dDM_{total}} {dt} = \frac{dDM_{root}} {dt} + \frac{dDM_{leaf}} {dt} + \frac{dDM_{petiole}} {dt}$$
 
 The growth rate of *DM~root~* is derived from the growth rate of *DM~total~* using an allocation coefficient *f* \[-\] which in turn is dependent on the amount of *DM~total~*
 
-$$\frac{dD{{M}_{root}}}{dt}=\frac{dD{{M}_{total}}}{dt}\cdot (f+{{f}_{a}})$$
+$$\frac{dDM_{root}} {dt} = \frac{dDM_{total}} {dt} \cdot (f + f_{a})$$
 
 with
 
-$$f={{({{f}_{a}}\cdot \ln (D{{M}_{total}})+{{f}_{b}})}_{{}}}$$
+$$f = f_{a} \cdot \ln(DM_{total}) + f_{b}$$
 
 where *f~a~* and *f~b~* are empiric regression coefficients describing slope and intercept of a linear regression of *f* on *DM~total~*. In turn the daily growth rate of the shoot *(DM~shoot~)* can be calculated by subtracting the daily growth rate of *DM~root~* from the daily growth rate of *DM~total~* and *DM~dead~*, which is the senescent dry matter of the leaves (see Eq. 16).
 
-$$\frac{dD{{M}_{shoot}}}{dt}=\frac{dD{{M}_{total}}}{dt}-\frac{dD{{M}_{root}}}{dt}-\frac{dD{{M}_{dead}}}{dt}$$ To distribute the shoot dry matter into *DM~leaf~* and *DM~petiole~* an allometric relationship between *DM~leaf~* and *DM~petiole~* is assumed. The relative growth rates of *DM~leaf~* and *DM~petiole~* exhibit a constant ratio leading to a linear function between the natural logarithm of both fractions (Eq. 11).
+$$\frac{dDM_{shoot}} {dt} = \frac{dDM_{total}} {dt} - \frac{dDM_{root}} {dt} - \frac{dDM_{dead}} {dt}$$
 
-$$\ln (D{{M}_{petiole}})={{f}_{la}}\cdot \ln (D{{M}_{leaf}})+{{f}_{lb}}$$
+To distribute the shoot dry matter into *DM~leaf~* and *DM~petiole~* an allometric relationship between *DM~leaf~* and *DM~petiole~* is assumed. The relative growth rates of *DM~leaf~* and *DM~petiole~* exhibit a constant ratio leading to a linear function between the natural logarithm of both fractions (Eq. 11).
+
+$$\ln(DM_{petiole}) = f_{la} \cdot \ln(DM_{leaf}) + f_{lb}$$
 
 where *f~la~* and *f~lb~* \[-\] are regression coefficients. *f~leaf~* can then be expressed as [@kage1999simple]. The growth rates of *DM~leaf~* and *DM~petiole~* are calculated from the growth rate of *DM~shoot~* using *f~leaf~*.
 
-$$\frac{dD{{M}_{leaf}}}{dt}={{f}_{leaf}}\cdot \frac{dD{{M}_{shoot}}}{dt}$$
+$$\frac{dDM_{leaf}} {dt} = f_{leaf} \cdot \frac{dDM_{shoot}} {dt}$$
 
 and
 
-$$\frac{dD{{M}_{petiole}}}{dt}=(1-{{f}_{leaf}})\cdot \frac{dD{{M}_{shoot}}}{dt}$$
+$$\frac{dDM_{petiole}} {dt} = (1 - f_{leaf}) \cdot \frac{dDM_{shoot}} {dt}$$
 
-$${{f}_{leaf}}=\frac{1}{1+{{e}^{{{f}_{lb}}}}\cdot {{f}_{la}}\cdot D{{M}_{leaf}}^{(f_{la}-1)}}$$
+$$f_{leaf} = \frac{1} {1 + e^{f_{lb}} \cdot f_{la} \cdot DM_{leaf}^{(f_{la} - 1)}}$$
 
 The sugar growth rate *(S)* is calculated according to @qi2005broom using a sugar partitioning coefficient *(SPC)*.
 
-$$\frac{dS}{dt}=\frac{dD{{M}_{total}}}{dt}\cdot \left( \frac{SPC\cdot D{{M}_{total}}}{1+SPC\cdot D{{M}_{total}}} \right)$$
+$$\frac{dS} {dt} = \frac{dDM_{total}} {dt} \cdot \left(\frac{SPC \cdot DM_{total}} {1 + SPC \cdot DM_{total}} \right)$$
 
 ### Leaf area index calculation
 
