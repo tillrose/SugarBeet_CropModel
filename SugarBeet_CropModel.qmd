@@ -9,6 +9,8 @@ html-math-method: katex
 toc: true
 toc-expand: 3
 toc-location: left
+crossref:
+  eq-prefix: Eq.
 ---
 
 ```{r setup, include=FALSE}
