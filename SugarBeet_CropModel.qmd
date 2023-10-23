@@ -20,7 +20,7 @@ rm(list = ls(all.names = TRUE))
 
 # The model
 
-A process-oriented dynamic model was developed which runs on daily time steps. Required external data inputs are the mean daily temperature \[°C\], precipitation \[mm d^-1^\], global radiation \[W m^-2^\], wind speed \[m s^-1^\], relative humidity \[%\] and values derived from these like vapour pressure \[mbar\] and saturation deficit \[mbar\]. Temperature depended processes are calculated generally using an effective temperature *(T~eff~)* \[°C\], which is the mean daily air temperature \[°C\] *(T~air~)* minus a base temperature *(T~b~ = 3 °C)*, which is the limit for growing processes in sugar beet [@milford1985analysis].
+A process-oriented dynamic model was developed which runs on daily time steps. Required external data inputs are the mean daily temperature \[°C\], precipitation \[mm d^-1^\], global radiation \[W m^-2^\], wind speed \[m s^-1^\], relative humidity \[%\] and values derived from these like vapour pressure \[mbar\] and saturation deficit \[mbar\]. Temperature depended processes are calculated generally using an effective temperature *(T~eff~)* \[°C\], which is the mean daily air temperature \[°C\] *(T~air~)* minus a base temperature *(T~b~ = 3 °C)* (@eq-effective-temperature), which is the limit for growing processes in sugar beet [@milford1985analysis].
 
 $$T_{eff}  = \begin{cases}
 T_{air} - T_{b} & |~~T>0\\ 
@@ -76,11 +76,11 @@ with
 
 $$f = f_{a} \cdot \ln (DM_{total}) + f_{b}$$ {#eq-root-change-detail}
 
-where *f~a~* and *f~b~* are empiric regression coefficients describing slope and intercept of a linear regression of *f* on *DM~total~*. In turn the daily growth rate of the shoot *(DM~shoot~)* can be calculated by subtracting the daily growth rate of *DM~root~* from the daily growth rate of *DM~total~* and *DM~dead~*, which is the senescent dry matter of the leaves (see Eq. 16).
+where *f~a~* and *f~b~* are empiric regression coefficients describing slope and intercept of a linear regression of *f* on *DM~total~*. In turn the daily growth rate of the shoot *(DM~shoot~)* can be calculated by subtracting the daily growth rate of *DM~root~* from the daily growth rate of *DM~total~* and *DM~dead~*, which is the senescent dry matter of the leaves (@eq-shoot-change).
 
 $$\frac{dDM_{shoot}} {dt} = \frac{dDM_{total}} {dt} - \frac{dDM_{root}} {dt} - \frac{dDM_{dead}} {dt}$$ {#eq-shoot-change}
 
-To distribute the shoot dry matter into *DM~leaf~* and *DM~petiole~* an allometric relationship between *DM~leaf~* and *DM~petiole~* is assumed. The relative growth rates of *DM~leaf~* and *DM~petiole~* exhibit a constant ratio leading to a linear function between the natural logarithm of both fractions (Eq. 11).
+To distribute the shoot dry matter into *DM~leaf~* and *DM~petiole~* an allometric relationship between *DM~leaf~* and *DM~petiole~* is assumed. The relative growth rates of *DM~leaf~* and *DM~petiole~* exhibit a constant ratio leading to a linear function between the natural logarithm of both fractions (@eq-fraction-petiole).
 
 $$\ln (DM_{petiole}) = f_{la} \cdot \ln (DM_{leaf}) + f_{lb}$$ {#eq-fraction-petiole}
 
