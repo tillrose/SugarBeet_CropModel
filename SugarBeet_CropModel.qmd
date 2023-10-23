@@ -5,6 +5,10 @@ date: "`r Sys.Date()`"
 bibliography: bibliography.bibtex.bib
 csl: european-journal-of-agronomy.csl
 chunk_output_type: console
+html-math-method: katex
+toc: true
+toc-expand: 3
+toc-location: left
 ---
 
 ```{r setup, include=FALSE}
@@ -18,10 +22,10 @@ rm(list = ls(all.names = TRUE))
 
 A process-oriented dynamic model was developed which runs on daily time steps. Required external data inputs are the mean daily temperature \[°C\], precipitation \[mm d^-1^\], global radiation \[W m^-2^\], wind speed \[m s^-1^\], relative humidity \[%\] and values derived from these like vapour pressure \[mbar\] and saturation deficit \[mbar\]. Temperature depended processes are calculated generally using an effective temperature *(T~eff~)* \[°C\], which is the mean daily air temperature \[°C\] *(T~air~)* minus a base temperature *(T~b~ = 3 °C)*, which is the limit for growing processes in sugar beet [@milford1985analysis].
 
-$$T_{eff}  = \left\{\begin{array}{2, 2}
-T_{air} - T_{b} & |~T>0~~\\ 
-0 & |~T<30
-\end{array}\right.$$ {#eq-effective-temperature}
+$$T_{eff}  = \begin{cases}
+T_{air} - T_{b} & |~~T>0\\ 
+0 & |~~T<3
+\end{cases}$$ {#eq-effective-temperature}
 
 The model was implemented using an object oriented component library termed HUME [@kage1999] on the basis of Embarcadero® Delphi® 2010 (Embarcadero Technologies, Inc., USA). The model is comprised of submodels describing plant growth and development, soil water dynamics, and evapotranspiration.
 
@@ -112,7 +116,7 @@ $$LAI_e = \frac{LAI_0 \cdot SD^{(RGR_{l} \cdot (T_{sum} - T_{em}))}} {10000}$$ {
 
 The values for the *LAI~0~* and *RGR~l~* are used according to @guerif1998calibration while *LAI~crit~* was estimated from experiment 1. In the start phase the *LAI* is replaced by *LAI~e~* in Eq. 2. The use of *LAI~e~* is limited to a threshold *(LAI~crit~)* \[-\]. Exceeding this threshold LAI growth is assumed to be not only temperature driven but depending on assimilate availability. Therefore for *LAI* \> *LAI~crit~* it is calculated according to Eq. 3. To take senescence processes in the canopy into account an approach from @gabrielle1998model was used. The maximum sustainable *LAI* *(LAI~susmax~)* \[m^2^ m^-2^\]) depending on the incoming radiation is calculated as
 
-$$LAI_{susmax} = \frac{1} {k} \cdot log(\frac{PAR_{mean}} {PAR_x \cdot f_{tempLAI}})$$ {#eq-LAI-susmax}
+$$LAI_{susmax} = \frac{1} {k} \cdot log \left(\frac{PAR_{mean}} {PAR_x \cdot f_{tempLAI}}\ \right)$$ {#eq-LAI-susmax}
 
 where *PAR~x~* is a threshold value for the radiation which is needed to maintain leaf net assimilation positive. Below this value the bottom leaves will start to become senescent. As the respiration is a process depending on temperature, *PAR~x~* is modified by a temperature factor *ftemp~LAI~*, which is based on a Q10 factor of 2 and a reference temperature *(T~r~)* \[°C\] of 20 °C.
 
@@ -120,10 +124,10 @@ $$f_{tempLAI}=q_{10}^\frac{T_{air}-T_r}{10}$$ {#eq-ftemplai}
 
 If *LAI* \> *LAI~susmax~* senescence due to low radiation occurs and the daily senescence rate *LAI~s~* is calculated as
 
-$$\frac {dLAI_s} {dt} = \left\{\begin{array}{2, 2}
-  LAI - LAI_{susmax} \cdot f_{sen} & |~LAI > LAI_{susmax} \\ 
-  0 & |~T_{eff} < LAI_{susmax}
-\end{array} \right.$$ {#eq-LAI-senescence}
+$$\frac {dLAI_s} {dt} = \begin{cases}
+  LAI - LAI_{susmax} \cdot f_{sen} & |~~LAI > LAI_{susmax} \\ 
+  0 & |~~T_{eff} < LAI_{susmax}
+\end{cases}$$ {#eq-LAI-senescence}
 
 where *f~sen~* is a parameter describing the portion of *LAI* that is reduced each day. As a reduction in the *LAI* due to senescence is coupled with a reduction in *DM~shoot~* the amount of dead dry matter is calculated *(DM~dead~)* \[g m^-2^\].
 
