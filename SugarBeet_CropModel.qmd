@@ -11,6 +11,10 @@ toc-expand: 3
 toc-location: left
 crossref:
   eq-prefix: Eq.
+format:
+ html:
+  mermaid:
+    theme: neutral
 ---
 
 ```{r setup, include=FALSE}
@@ -20,47 +24,44 @@ rm(list = ls(all.names = TRUE))
 
 ```
 
-# The model
+The process-oriented dynamic model runs on daily time steps. Required external data inputs are the mean daily temperature \[°C\], precipitation \[mm d^-1^\], global radiation \[W m^-2^\], wind speed \[m s^-1^\], relative humidity \[%\] and values derived from these like vapor pressure \[mbar\] and saturation deficit \[mbar\].
 
-A process-oriented dynamic model was developed which runs on daily time steps. Required external data inputs are the mean daily temperature \[°C\], precipitation \[mm d^-1^\], global radiation \[W m^-2^\], wind speed \[m s^-1^\], relative humidity \[%\] and values derived from these like vapour pressure \[mbar\] and saturation deficit \[mbar\]. Temperature depended processes are calculated generally using an effective temperature *(T~eff~)* \[°C\], which is the mean daily air temperature \[°C\] *(T~air~)* minus a base temperature *(T~b~ = 3 °C)* (@eq-effective-temperature), which is the limit for growing processes in sugar beet [@milford1985analysis].
+# Plant
 
-$$T_{eff}  = \begin{cases}
-T_{air} - T_{b} & |~~T>0\\ 
-0 & |~~T<3
-\end{cases}$$ {#eq-effective-temperature}
+## Growth
 
-The model was implemented using an object oriented component library termed HUME [@kage1999] on the basis of Embarcadero® Delphi® 2010 (Embarcadero Technologies, Inc., USA). The model is comprised of submodels describing plant growth and development, soil water dynamics, and evapotranspiration.
+Growth, i.e. the increase of dry matter, is the central process of the crop model and the accumulated total dry matter is its main state variable. The simulation of plant growth is based on the large scale approach introduced by @climate1977 where bulk net photosynthesis \[g m^-2^ d^-1^ \] is the product of the intercepted photosynthetic active radiation *(Q)* \[MJ m^-2^ d^-1^ \] and its empirical conversion efficiency -- termed radiation use efficiency *(RUE)* \[g MJ^-1^\] (@eq-dm-change-1).
 
-## Plant growth module
+$$\frac{dDM_{total}} {dt} = Q \cdot RUE$$ {#eq-dm-change-1}
 
-### Dry matter production
+*Q* is estimated as a function of incoming photosynthetic active radiation *(PAR)* \[MJ m^-2^ d^-1^ \], leaf area index *(LAI)* \[m^2^ m^-2^\] and the extinction coefficient for photosynthetic active radiation *(PAR)* \[ - \] [@monsi2004] (@eq-monsi).
 
-The simulation of plant growth is based on an approach using light use efficiency *(LUE~PAR~)* \[g MJ^-1^\] to calculate dry matter production. Leaf area index *(LAI)* \[m^2^ m^-2^\] is thereby used to calculate the intercepted photosynthetic active radiation *(Q)* \[MJ m^-2^\]
+$$Q = PAR \cdot 1 - e^{-k_{PAR} \cdot LAI}$$ {#eq-monsi}
 
-$$Q = 0.5 \cdot R_{global} \cdot 1 - e^{-k_{PAR} \cdot LAI}$$ {#eq-monteith}
+Here, *k~PAR~* is assumed to be constant [@andrieu1997ground] and *PAR* is assumed to be 50% of the incoming global radiation (Szeicz, 1974).
 
-where *R~global~* is the global radiation \[MJ m^-2^\] and *k~PAR~* the extinction-coefficient for photosynthetic active radiation \[-\]. *k~PAR~* is assumed to be constant [@andrieu1997ground]. The factor 0.5 reflects the assumption that roughly 50% of the incoming global radiation is photosynthetic active radiation \[MJ m^-2^\] (Szeicz, 1974). The daily total dry matter growth rate \[g m^-2^ d^-1^\] is calculated by multiplying the intercepted radiation *(Q)* with the potenial light use efficiency for photosynthetic active radiation *(LUE~PAR~)* \[g MJ^-1^\] and stress factors for drought stress *(f~droughtLUE~)* \[-\] and for temperature *(f~tempLUE~)* \[-\].
+The potential daily growth is often limited by sub optimal conditions which is represented by extension of @eq-dm-change-1 with stress factors for drought stress *(f~droughtLUE~)* \[-\] and for temperature *(f~temperatureLUE~)* \[-\] (@eq-dm-change-2). Thereby, *RUE* is better described as a potential *RUE* *(RUE~pot~)*.
 
-$$\frac{dDM_{total}} {dt} = Q \cdot LUE_{par} \cdot f_{droughtLUE} \cdot f_{tempLUE}$$ {#eq-dm-change}
+$$\frac{dDM_{total}} {dt} = Q \cdot RUE_{pot} \cdot f_{droughtRUE} \cdot f_{temperatureRUE}$$ {#eq-dm-change-2}
 
-*f~droughtLUE~* describes the reduction of dry matter production if potential transpiration (T\~pot) \[mm d^-1^\] exceeds actual transpiration (T\~act) \[mm d^-1^\].
+Here, *f~droughtLUE~* describes the reduction of dry matter production if potential transpiration (T~pot~) \[mm d^-1^\] exceeds actual transpiration (T~act~) \[mm d^-1^\].
 
 $$f_{droughtLUE} = \frac{T_{act}} {T_{pot}}$$ {#eq-tact-tpot}
 
-*ftempLUE* describes the reduction of dry matter production due to suboptimal temperature. It follows a trapezoidal optimum function, which can be described by 4 cardinal temperatures (T~b~ = minimum temperature for dry matter production, T~2~ and T~3~ = lower an upper limit of the optimal temperature range, T~4~ = maximum temperature). The values for T~b~-T~4~ for the calculations of *ftempLUE* are obtained from the literature and from experiment 1. Specification of the optimum temperatures for growth processes in sugar beet varies within the literature. Optimum temperature for leaf growth ranges between 19 °C [@milford1980effects] and 24 °C [@terry1968developmental] while that for taproot growth was lower (12 °C [@milford1980effects], 17 °C [@terry1968developmental] or 18 °C [@kenter2006effects]. @vandendriessche2000model uses in his model a temperature optimum from 10 °C to 25 °C for sugar beet assimilation. The lower limit of the temperature optimum was parameterised using the data of experiment 1 and resulted in T~2~ = 15.5 °C. As the upper limit of the temperature optimum is unlikely to be reflected in the experimental data a value of T~3~ = 25 °C was chosen to cover the mostly mentioned optimum temperatures for taproot and leaf growth. T~4~ as upper limit was set to 35 °C according to @vandendriessche2000model.
+*f~temperatureLUE~* describes the reduction of dry matter production due to suboptimal temperature. It follows a trapezoidal optimum function, which can be described by 4 cardinal temperatures (T~b~ = minimum temperature for dry matter production, T~2~ and T~3~ = lower an upper limit of the optimal temperature range, T~4~ = maximum temperature). The values for T~b~-T~4~ for the calculations of *f~temperatureLUE~* are obtained from the literature and from experiment 1. Specification of the optimum temperatures for growth processes in sugar beet varies within the literature. Optimum temperature for leaf growth ranges between 19 °C [@milford1980effects] and 24 °C [@terry1968developmental] while that for taproot growth was lower (12 °C [@milford1980effects], 17 °C [@terry1968developmental] or 18 °C [@kenter2006effects]. @vandendriessche2000model uses in his model a temperature optimum from 10 °C to 25 °C for sugar beet assimilation. The lower limit of the temperature optimum was parameterised using the data of experiment 1 and resulted in T~2~ = 15.5 °C. As the upper limit of the temperature optimum is unlikely to be reflected in the experimental data a value of T~3~ = 25 °C was chosen to cover the mostly mentioned optimum temperatures for taproot and leaf growth. T~4~ as upper limit was set to 35 °C according to @vandendriessche2000model.
 
 ```{mermaid}
 
 flowchart LR
   A(RUEpot) -.-> F
-  C(ftempLUE) -.-> A
+  C(ftemperatureLUE) -.-> A
   D(fdroughtLUE) -.-> A
-  E(Q) --> F{dWdt}
+  E(Q) --> F{dW/dt}
   F --> B[DM]
   
 ```
 
-### Dry matter partitioning
+## Dry matter partitioning
 
 Total dry matter *(DM~total~)* \[g m^-2^\] in the model is partitioned into three plant components: root dry matter *(DM~root~)* \[g m^-2^\], petiole dry matter *(DM~petiole~)* \[g m^-2^\] and leaf dry matter *(DM~leaf~)* \[g m^-2^\]. *DM~root~* refers to the storage root of the sugar beets.
 
@@ -100,7 +101,7 @@ The sugar growth rate *(S)* is calculated according to @qi2005broom using a suga
 
 $$\frac{dS} {dt} = \frac{dDM_{total}} {dt} \cdot \left(\frac{SPC \cdot DM_{total}} {1 + SPC \cdot DM_{total}} \right)$$ {#eq-sugar-partioning}
 
-### Leaf area index calculation
+## Leaf area index calculation
 
 To calculate the intercepted radiation the actual LAI is needed for Eq. 2. It is calculated from *DM~leaf~* using the specific leaf area *(SLA)* \[cm^2^ g^-1^\].
 
@@ -112,11 +113,11 @@ The *SLA* is calculated depending on three factors:
 2.  Mean PAR over ten days *(PAR~mean~)* \[MJ m^-2^\],
 3.  Temperature sum *(T~Sum~)* \[°C\].
 
-*T~sum~* is the accumulated *T~eff~* over time starting from sowing. The parameters were obtained from parameterisation using data from experiment 1. (Eq. 17) The dry matter production is initialised by the calculation of the temperature depending leaf area index after emergence *(LAI~e~)* \[m^2^ m^-2^\]. This starts if T~sum~ is greater than the value of the growing degree-days needed for emergence *(T~em~)* \[°Cd\]. @hoffmann2011growth estimated 100 to 130 °Cd to be required for 50% field emergence of autumn and spring sown sugar beets, whereas @guerif1998calibration reported of 80--150 °Cd. We set *T~em~* to 130 °Cd in our model. The determining factors for the exponential early growth of *LAI~e~* are plant density *(SD)* \[plants m^-2^\], leaf area per plant at emergence *(LAI~0~)* \[cm^2^ plant^-1^\], relative growth rate of early canopy growth *(RGR~l~)* and T~sum~ and T~em~.
+*T~sum~* is the accumulated *T~eff~* over time starting from sowing. The parameters were obtained from parameterisation using data from experiment 1. (Eq. 17) The dry matter production is initialised by the calculation of the temperature depending leaf area index after emergence *(LAI~e~)* [m^2^ m^-2^]. This starts if T~sum~ is greater than the value of the growing degree-days needed for emergence *(T~em~)* [°Cd]. @hoffmann2011growth estimated 100 to 130 °Cd to be required for 50% field emergence of autumn and spring sown sugar beets, whereas @guerif1998calibration reported of 80--150 °Cd. We set *T~em~* to 130 °Cd in our model. The determining factors for the exponential early growth of *LAI~e~* are plant density *(SD)* [plants m^-2^], leaf area per plant at emergence *(LAI~0~)* \[cm^2^ plant^-1^\], relative growth rate of early canopy growth *(RGR~l~)* and T~sum~ and T~em~.
 
 $$LAI_e = \frac{LAI_0 \cdot SD^{(RGR_{l} \cdot (T_{sum} - T_{em}))}} {10000}$$ {#eq-LAI-emergence}
 
-The values for the *LAI~0~* and *RGR~l~* are used according to @guerif1998calibration while *LAI~crit~* was estimated from experiment 1. In the start phase the *LAI* is replaced by *LAI~e~* in Eq. 2. The use of *LAI~e~* is limited to a threshold *(LAI~crit~)* \[-\]. Exceeding this threshold LAI growth is assumed to be not only temperature driven but depending on assimilate availability. Therefore for *LAI* \> *LAI~crit~* it is calculated according to Eq. 3. To take senescence processes in the canopy into account an approach from @gabrielle1998model was used. The maximum sustainable *LAI* *(LAI~susmax~)* \[m^2^ m^-2^\]) depending on the incoming radiation is calculated as
+The values for the *LAI~0~* and *RGR~l~* are used according to @guerif1998calibration while *LAI~crit~* was estimated from experiment 1. In the start phase the *LAI* is replaced by *LAI~e~* in Eq. 2. The use of *LAI~e~* is limited to a threshold *(LAI~crit~)* [-]. Exceeding this threshold LAI growth is assumed to be not only temperature driven but depending on assimilate availability. Therefore for *LAI* \> *LAI~crit~* it is calculated according to Eq. 3. To take senescence processes in the canopy into account an approach from @gabrielle1998model was used. The maximum sustainable *LAI* *(LAI~susmax~)* [m^2^ m^-2^]) depending on the incoming radiation is calculated as
 
 $$LAI_{susmax} = \frac{1} {k} \cdot log \left(\frac{PAR_{mean}} {PAR_x \cdot f_{tempLAI}}\ \right)$$ {#eq-LAI-susmax}
 
@@ -137,17 +138,17 @@ $$DM_{dead} = \frac {LAI_s} {SLA_{dead}} \cdot 10000$$ {#eq-dm-dead}
 
 where *SLA~dead~* is the *SLA* of the senescent leaves.
 
-### Evapotranspiration
+## Evapotranspiration
 
 The evapotranspiration module is based on the Penman-Monteith equation [@monteith2013principles]. This equation needs as input data global radiation \[W m^-2^\], wind speed \[m s^-1^\], saturation deficit \[mbar\] and daily mean temperature \[°C\] to calculate the potential evapotranspiration *(ET~pot~)* \[mm d^-1^\]. These required data are obtained from the model input weather data file. To calculate the aerodynamic resistance of the crop *(r~a~)* \[s m^-1^\] and the canopy resistance *(r~c~)* \[s m^-1^\] the crop height *(crop~height~)* \[m\] and the *LAI* are needed. Both values are provided by the plant growth module. Potential evapotranspiration is divided into potential evaporation *(E~pot~)* \[mm d^-1^\] and potential transpiration *(T~pot~)* \[mm d^-1^\]) plus interception *(I)* \[mm d^-1^\] according to the calculated amount of radiation reaching the soil surface relative to the total global radiation.
 
-### Soil water
+# Soil water
 
 The soil water dynamics are simulated using a water content based solution of the Richards-equation. The soil is divided in different layers and for each layer the water content is calculated. *T~pot~* as potential water uptake is distributed to the soil layers according to the root length density *(RLD)* \[cm cm^-3^\] in each layer. It is assumed, that the root length density decreases exponentially with soil depth [@kage2000simulation]. The depth growth of the roots is linearly calculated depending on *T~sum~* and a parameter *rd* \[cm d^-1^ °C\], which describes the increase in rooting depth in relation to *T~sum~*. *rd* was estimated using data presented by @brown1985fibrous and the measured water content values from experiment 1. The maximum rooting depth was assumed to be 150 cm. The root depth growth ceases at temperatures \< 3 °C. The actual water uptake from the soil layer is calculated from the potential uptake and a reduction function depending on the water content.
 
-### Additional components to simulate winter sugar beet
+# Additional components to simulate winter sugar beet
 
-#### Leaf loss over winter
+## Leaf loss over winter
 
 Winter sugar beets can lose their leaves and petioles over winter due to frost, up to a total loss. According to an approach of @muller2009remote, negative mean daily temperatures \<-2° C are summed up *(TS~min~)* \[°C\]. The rate of shoot dry matter loss is estimated from the existing *DM~shoot~*, the changing rate of *TS~min~* and a factor for dry matter decrease *(LPL)* \[-\].
 
@@ -159,10 +160,23 @@ $$\frac{dDM_{Shoot}} {dt} = \frac{dDM_{tot}} {dt} - \frac{dDM_{root}} {dt} - \fr
 
 A new initialization of the *LAI* is necessary, if *DM~leaf~* is 0. Therefore in spring an initial LAI of 0.025 is assumed if the temperature is \>*T~b~* and *LAI* \< 0.025, simulating a regrowth from stored assimilates within the beet.
 
-#### Vernalisation
+## Vernalisation
 
 Vernalisation was estimated using a modification of the model of @milford2010vernalization. To be able to use daily weather data, the original model working on an hourly basis was converted to a daily basis with mean daily temperature. The daily vernalisation rate is calculated as a value between 0 and 1 depending on *T~air~* (Fig. 1). The vernalisation values of each day are added until the sum required for fully vernalising the sugar beet was accomplished. Vernalising temperatures are commonly assumed to range between 1--12 °C with an optimum between 6--8° C [@jaggard1983effects; @milford2010vernalization]. Data about the absolute vernalisation requirement of sugar beet are still scarce. In a climate chamber experiment with sugar beets, @mutasa2010bolting used a temperature regime of 8 °C for 9 days, 6--8 °C for the following 18 days and a 7-day thermal buffer period at 15 °C as vernalisation (all in one 32 days) whereas @crosthwaite1993role proposed 6--11 °C with 8 hours of light for 3 month. Testing the vernalisation requirement of Beta vulgaris spp. maritima from different populations across France and Belgium @boudry2002vernalization used 5--7 °C for 60 days to vernalise the beets. We assumed temperatures of 5--7 °C for 60 days to be sufficient to fully meet the vernalisation requirement of sugar beets.
 
-#### Assumptions for non-bolting winter beet
+## Assumptions for non-bolting winter beet
 
 As no non-bolting winter beet variety exists at present, it is assumed that the growing phase in autumn/winter can be simulated according to bolting winter beet. After reaching full vernalisation the beet follows the growth pattern of conventional sugar beet in spring.
+
+# Implementation
+
+The model was implemented using an object oriented component library termed HUME [@kage1999] on the basis of Embarcadero® Delphi® 2010 (Embarcadero Technologies, Inc., USA). The model is comprised of submodels describing plant growth and development, soil water dynamics, and evapotranspiration.
+
+# Miscellaneous
+
+Temperature depended processes are calculated generally using an effective temperature *(T~eff~)* \[°C\], which is the mean daily air temperature \[°C\] *(T~air~)* minus a base temperature *(T~b~ = 3 °C)* (@eq-effective-temperature), which is the limit for growing processes in sugar beet [@milford1985analysis].
+
+$$T_{eff}  = \begin{cases}
+T_{air} - T_{b} & |~~T>0\\ 
+0 & |~~T<3
+\end{cases}$$ {#eq-effective-temperature}

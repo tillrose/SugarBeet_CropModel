@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Agronomy and Crop Science Group, Kiel University">
-<meta name="dcterms.date" content="2023-10-23">
+<meta name="dcterms.date" content="2023-10-24">
 
 <title>SugarBeet_CropModel - Simulation of Sugar Beet Growth</title>
 <style>
@@ -79,6 +79,7 @@ div.csl-indent {
     "search-label": "Search"
   }
 }</script>
+<meta name="mermaid-theme" content="neutral">
 <script src="site_libs/quarto-diagram/mermaid.min.js"></script>
 <script src="site_libs/quarto-diagram/mermaid-init.js"></script>
 <link href="site_libs/quarto-diagram/mermaid.css" rel="stylesheet">
@@ -113,18 +114,22 @@ div.csl-indent {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#the-model" id="toc-the-model" class="nav-link active" data-scroll-target="#the-model">The model</a>
+  <li><a href="#plant" id="toc-plant" class="nav-link active" data-scroll-target="#plant">Plant</a>
   <ul class="collapse">
-  <li><a href="#plant-growth-module" id="toc-plant-growth-module" class="nav-link" data-scroll-target="#plant-growth-module">Plant growth module</a>
-  <ul class="collapse">
-  <li><a href="#dry-matter-production" id="toc-dry-matter-production" class="nav-link" data-scroll-target="#dry-matter-production">Dry matter production</a></li>
+  <li><a href="#growth" id="toc-growth" class="nav-link" data-scroll-target="#growth">Growth</a></li>
   <li><a href="#dry-matter-partitioning" id="toc-dry-matter-partitioning" class="nav-link" data-scroll-target="#dry-matter-partitioning">Dry matter partitioning</a></li>
   <li><a href="#leaf-area-index-calculation" id="toc-leaf-area-index-calculation" class="nav-link" data-scroll-target="#leaf-area-index-calculation">Leaf area index calculation</a></li>
   <li><a href="#evapotranspiration" id="toc-evapotranspiration" class="nav-link" data-scroll-target="#evapotranspiration">Evapotranspiration</a></li>
+  </ul></li>
   <li><a href="#soil-water" id="toc-soil-water" class="nav-link" data-scroll-target="#soil-water">Soil water</a></li>
-  <li><a href="#additional-components-to-simulate-winter-sugar-beet" id="toc-additional-components-to-simulate-winter-sugar-beet" class="nav-link" data-scroll-target="#additional-components-to-simulate-winter-sugar-beet">Additional components to simulate winter sugar beet</a></li>
+  <li><a href="#additional-components-to-simulate-winter-sugar-beet" id="toc-additional-components-to-simulate-winter-sugar-beet" class="nav-link" data-scroll-target="#additional-components-to-simulate-winter-sugar-beet">Additional components to simulate winter sugar beet</a>
+  <ul class="collapse">
+  <li><a href="#leaf-loss-over-winter" id="toc-leaf-loss-over-winter" class="nav-link" data-scroll-target="#leaf-loss-over-winter">Leaf loss over winter</a></li>
+  <li><a href="#vernalisation" id="toc-vernalisation" class="nav-link" data-scroll-target="#vernalisation">Vernalisation</a></li>
+  <li><a href="#assumptions-for-non-bolting-winter-beet" id="toc-assumptions-for-non-bolting-winter-beet" class="nav-link" data-scroll-target="#assumptions-for-non-bolting-winter-beet">Assumptions for non-bolting winter beet</a></li>
   </ul></li>
-  </ul></li>
+  <li><a href="#implementation" id="toc-implementation" class="nav-link" data-scroll-target="#implementation">Implementation</a></li>
+  <li><a href="#miscellaneous" id="toc-miscellaneous" class="nav-link" data-scroll-target="#miscellaneous">Miscellaneous</a></li>
   </ul>
 </nav>
 </nav>
@@ -154,7 +159,7 @@ div.csl-indent {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">October 23, 2023</p>
+      <p class="date">October 24, 2023</p>
     </div>
   </div>
   
@@ -164,34 +169,30 @@ div.csl-indent {
 
 </header>
 
-<section id="the-model" class="level1">
-<h1>The model</h1>
-<p>A process-oriented dynamic model was developed which runs on daily time steps. Required external data inputs are the mean daily temperature [°C], precipitation [mm d<sup>-1</sup>], global radiation [W m<sup>-2</sup>], wind speed [m s<sup>-1</sup>], relative humidity [%] and values derived from these like vapour pressure [mbar] and saturation deficit [mbar]. Temperature depended processes are calculated generally using an effective temperature <em>(T<sub>eff</sub>)</em> [°C], which is the mean daily air temperature [°C] <em>(T<sub>air</sub>)</em> minus a base temperature <em>(T<sub>b</sub> =&nbsp;3&nbsp;°C)</em> (<a href="#eq-effective-temperature">Eq.&nbsp;1</a>), which is the limit for growing processes in sugar beet <span class="citation" data-cites="milford1985analysis">(<a href="#ref-milford1985analysis" role="doc-biblioref">Milford et al., 1985</a>)</span>.</p>
-<p><span id="eq-effective-temperature"><span class="math display">T_{eff}  = \begin{cases}
-T_{air} - T_{b} &amp; |~~T&gt;0\\
-0 &amp; |~~T&lt;3
-\end{cases} \tag{1}</span></span></p>
-<p>The model was implemented using an object oriented component library termed HUME <span class="citation" data-cites="kage1999">(<a href="#ref-kage1999" role="doc-biblioref">H. Kage and Stützel, 1999a</a>)</span> on the basis of Embarcadero® Delphi® 2010 (Embarcadero Technologies, Inc., USA). The model is comprised of submodels describing plant growth and development, soil water dynamics, and evapotranspiration.</p>
-<section id="plant-growth-module" class="level2">
-<h2 class="anchored" data-anchor-id="plant-growth-module">Plant growth module</h2>
-<section id="dry-matter-production" class="level3">
-<h3 class="anchored" data-anchor-id="dry-matter-production">Dry matter production</h3>
-<p>The simulation of plant growth is based on an approach using light use efficiency <em>(LUE<sub>PAR</sub>)</em>&nbsp;[g MJ<sup>-1</sup>] to calculate dry matter production. Leaf area index <em>(LAI)</em> [m<sup>2</sup> m<sup>-2</sup>] is thereby used to calculate the intercepted photosynthetic active radiation <em>(Q)</em> [MJ m<sup>-2</sup>]</p>
-<p><span id="eq-monteith"><span class="math display">Q = 0.5 \cdot R_{global} \cdot 1 - e^{-k_{PAR} \cdot LAI} \tag{2}</span></span></p>
-<p>where <em>R<sub>global</sub></em> is the global radiation [MJ m<sup>-2</sup>] and <em>k<sub>PAR</sub></em> the extinction-coefficient for photosynthetic active radiation [-]. <em>k<sub>PAR</sub></em> is assumed to be constant <span class="citation" data-cites="andrieu1997ground">(<a href="#ref-andrieu1997ground" role="doc-biblioref">Andrieu et al., 1997</a>)</span>. The factor 0.5 reflects the assumption that roughly 50% of the incoming global radiation is photosynthetic active radiation [MJ m<sup>-2</sup>] (Szeicz, 1974). The daily total dry matter growth rate [g m<sup>-2</sup> d<sup>-1</sup>] is calculated by multiplying the intercepted radiation <em>(Q)</em> with the potenial light use efficiency for photosynthetic active radiation <em>(LUE<sub>PAR</sub>)</em> [g MJ<sup>-1</sup>] and stress factors for drought stress <em>(f<sub>droughtLUE</sub>)</em> [-] and for temperature <em>(f<sub>tempLUE</sub>)</em> [-].</p>
-<p><span id="eq-dm-change"><span class="math display">\frac{dDM_{total}} {dt} = Q \cdot LUE_{par} \cdot f_{droughtLUE} \cdot f_{tempLUE} \tag{3}</span></span></p>
-<p><em>f<sub>droughtLUE</sub></em> describes the reduction of dry matter production if potential transpiration (T~pot) [mm d<sup>-1</sup>] exceeds actual transpiration (T~act) [mm d<sup>-1</sup>].</p>
+<p>The process-oriented dynamic model runs on daily time steps. Required external data inputs are the mean daily temperature [°C], precipitation [mm&nbsp;d<sup>-1</sup>], global radiation [W&nbsp;m<sup>-2</sup>], wind speed [m&nbsp;s<sup>-1</sup>], relative humidity [%] and values derived from these like vapor pressure [mbar] and saturation deficit [mbar].</p>
+<section id="plant" class="level1">
+<h1>Plant</h1>
+<section id="growth" class="level2">
+<h2 class="anchored" data-anchor-id="growth">Growth</h2>
+<p>Growth, i.e.&nbsp;the increase of dry matter, is the central process of the crop model and the accumulated total dry matter is its main state variable. The simulation of plant growth is based on the large scale approach introduced by <span class="citation" data-cites="climate1977">Monteith (<a href="#ref-climate1977" role="doc-biblioref">1977</a>)</span> where bulk net photosynthesis [g m<sup>-2</sup> d<sup>-1</sup> ] is the product of the intercepted photosynthetic active radiation <em>(Q)</em> [MJ m<sup>-2</sup> d<sup>-1</sup> ] and its empirical conversion efficiency – termed radiation use efficiency <em>(RUE)</em> [g MJ<sup>-1</sup>] (<a href="#eq-dm-change-1">Eq.&nbsp;1</a>).</p>
+<p><span id="eq-dm-change-1"><span class="math display">\frac{dDM_{total}} {dt} = Q \cdot RUE \tag{1}</span></span></p>
+<p><em>Q</em> is estimated as a function of incoming photosynthetic active radiation <em>(PAR)</em> [MJ m<sup>-2</sup> d<sup>-1</sup> ], leaf area index <em>(LAI)</em> [m<sup>2</sup> m<sup>-2</sup>] and the extinction coefficient for photosynthetic active radiation <em>(PAR)</em> [&nbsp;-&nbsp;] <span class="citation" data-cites="monsi2004">(<a href="#ref-monsi2004" role="doc-biblioref">Monsi and Saeki, 2005</a>)</span> (<a href="#eq-monsi">Eq.&nbsp;2</a>).</p>
+<p><span id="eq-monsi"><span class="math display">Q = PAR \cdot 1 - e^{-k_{PAR} \cdot LAI} \tag{2}</span></span></p>
+<p>Here, <em>k<sub>PAR</sub></em> is assumed to be constant <span class="citation" data-cites="andrieu1997ground">(<a href="#ref-andrieu1997ground" role="doc-biblioref">Andrieu et al., 1997</a>)</span> and <em>PAR</em> is assumed to be 50% of the incoming global radiation (Szeicz, 1974).</p>
+<p>The potential daily growth is often limited by sub optimal conditions which is represented by extension of <a href="#eq-dm-change-1">Eq.&nbsp;1</a> with stress factors for drought stress <em>(f<sub>droughtLUE</sub>)</em> [-] and for temperature <em>(f<sub>temperatureLUE</sub>)</em> [-] (<a href="#eq-dm-change-2">Eq.&nbsp;3</a>). Thereby, <em>RUE</em> is better described as a potential <em>RUE</em> <em>(RUE<sub>pot</sub>)</em>.</p>
+<p><span id="eq-dm-change-2"><span class="math display">\frac{dDM_{total}} {dt} = Q \cdot RUE_{pot} \cdot f_{droughtRUE} \cdot f_{temperatureRUE} \tag{3}</span></span></p>
+<p>Here, <em>f<sub>droughtLUE</sub></em> describes the reduction of dry matter production if potential transpiration (T<sub>pot</sub>) [mm d<sup>-1</sup>] exceeds actual transpiration (T<sub>act</sub>) [mm d<sup>-1</sup>].</p>
 <p><span id="eq-tact-tpot"><span class="math display">f_{droughtLUE} = \frac{T_{act}} {T_{pot}} \tag{4}</span></span></p>
-<p><em>ftempLUE</em> describes the reduction of dry matter production due to suboptimal temperature. It follows a trapezoidal optimum function, which can be described by 4 cardinal temperatures (T<sub>b</sub> = minimum temperature for dry matter production, T<sub>2</sub> and T<sub>3</sub> = lower an upper limit of the optimal temperature range, T<sub>4</sub> = maximum temperature). The values for T<sub>b</sub>-T<sub>4</sub> for the calculations of <em>ftempLUE</em> are obtained from the literature and from experiment 1. Specification of the optimum temperatures for growth processes in sugar beet varies within the literature. Optimum temperature for leaf growth ranges between 19&nbsp;°C <span class="citation" data-cites="milford1980effects">(<a href="#ref-milford1980effects" role="doc-biblioref">Milford and Riley, 1980</a>)</span> and 24&nbsp;°C <span class="citation" data-cites="terry1968developmental">(<a href="#ref-terry1968developmental" role="doc-biblioref">Terry, 1968</a>)</span> while that for taproot growth was lower (12&nbsp;°C <span class="citation" data-cites="milford1980effects">(<a href="#ref-milford1980effects" role="doc-biblioref">Milford and Riley, 1980</a>)</span>, 17&nbsp;°C <span class="citation" data-cites="terry1968developmental">(<a href="#ref-terry1968developmental" role="doc-biblioref">Terry, 1968</a>)</span> or 18&nbsp;°C <span class="citation" data-cites="kenter2006effects">(<a href="#ref-kenter2006effects" role="doc-biblioref">Kenter et al., 2006</a>)</span>. <span class="citation" data-cites="vandendriessche2000model">Vandendriessche (<a href="#ref-vandendriessche2000model" role="doc-biblioref">2000</a>)</span> uses in his model a temperature optimum from 10&nbsp;°C to 25&nbsp;°C for sugar beet assimilation. The lower limit of the temperature optimum was parameterised using the data of experiment 1 and resulted in T<sub>2</sub> = 15.5&nbsp;°C. As the upper limit of the temperature optimum is unlikely to be reflected in the experimental data a value of T<sub>3</sub> = 25&nbsp;°C was chosen to cover the mostly mentioned optimum temperatures for taproot and leaf growth. T<sub>4</sub> as upper limit was set to 35&nbsp;°C according to <span class="citation" data-cites="vandendriessche2000model">Vandendriessche (<a href="#ref-vandendriessche2000model" role="doc-biblioref">2000</a>)</span>.</p>
+<p><em>f<sub>temperatureLUE</sub></em> describes the reduction of dry matter production due to suboptimal temperature. It follows a trapezoidal optimum function, which can be described by 4 cardinal temperatures (T<sub>b</sub> = minimum temperature for dry matter production, T<sub>2</sub> and T<sub>3</sub> = lower an upper limit of the optimal temperature range, T<sub>4</sub> = maximum temperature). The values for T<sub>b</sub>-T<sub>4</sub> for the calculations of <em>f<sub>temperatureLUE</sub></em> are obtained from the literature and from experiment 1. Specification of the optimum temperatures for growth processes in sugar beet varies within the literature. Optimum temperature for leaf growth ranges between 19&nbsp;°C <span class="citation" data-cites="milford1980effects">(<a href="#ref-milford1980effects" role="doc-biblioref">Milford and Riley, 1980</a>)</span> and 24&nbsp;°C <span class="citation" data-cites="terry1968developmental">(<a href="#ref-terry1968developmental" role="doc-biblioref">Terry, 1968</a>)</span> while that for taproot growth was lower (12&nbsp;°C <span class="citation" data-cites="milford1980effects">(<a href="#ref-milford1980effects" role="doc-biblioref">Milford and Riley, 1980</a>)</span>, 17&nbsp;°C <span class="citation" data-cites="terry1968developmental">(<a href="#ref-terry1968developmental" role="doc-biblioref">Terry, 1968</a>)</span> or 18&nbsp;°C <span class="citation" data-cites="kenter2006effects">(<a href="#ref-kenter2006effects" role="doc-biblioref">Kenter et al., 2006</a>)</span>. <span class="citation" data-cites="vandendriessche2000model">Vandendriessche (<a href="#ref-vandendriessche2000model" role="doc-biblioref">2000</a>)</span> uses in his model a temperature optimum from 10&nbsp;°C to 25&nbsp;°C for sugar beet assimilation. The lower limit of the temperature optimum was parameterised using the data of experiment 1 and resulted in T<sub>2</sub> = 15.5&nbsp;°C. As the upper limit of the temperature optimum is unlikely to be reflected in the experimental data a value of T<sub>3</sub> = 25&nbsp;°C was chosen to cover the mostly mentioned optimum temperatures for taproot and leaf growth. T<sub>4</sub> as upper limit was set to 35&nbsp;°C according to <span class="citation" data-cites="vandendriessche2000model">Vandendriessche (<a href="#ref-vandendriessche2000model" role="doc-biblioref">2000</a>)</span>.</p>
 <div class="cell">
 <div class="cell-output-display">
 <div>
 <div>
 <pre class="mermaid mermaid-js">flowchart LR
   A(RUEpot) -.-&gt; F
-  C(ftempLUE) -.-&gt; A
+  C(ftemperatureLUE) -.-&gt; A
   D(fdroughtLUE) -.-&gt; A
-  E(Q) --&gt; F{dWdt}
+  E(Q) --&gt; F{dW/dt}
   F --&gt; B[DM]
   
 </pre>
@@ -200,8 +201,8 @@ T_{air} - T_{b} &amp; |~~T&gt;0\\
 </div>
 </div>
 </section>
-<section id="dry-matter-partitioning" class="level3">
-<h3 class="anchored" data-anchor-id="dry-matter-partitioning">Dry matter partitioning</h3>
+<section id="dry-matter-partitioning" class="level2">
+<h2 class="anchored" data-anchor-id="dry-matter-partitioning">Dry matter partitioning</h2>
 <p>Total dry matter <em>(DM<sub>total</sub>)</em> [g m<sup>-2</sup>] in the model is partitioned into three plant components: root dry matter <em>(DM<sub>root</sub>)</em> [g m<sup>-2</sup>], petiole dry matter <em>(DM<sub>petiole</sub>)</em> [g m<sup>-2</sup>] and leaf dry matter <em>(DM<sub>leaf</sub>)</em> [g m<sup>-2</sup>]. <em>DM<sub>root</sub></em> refers to the storage root of the sugar beets.</p>
 <p><span id="eq-dm-partitioning"><span class="math display">DM_{total} = DM_{root} + DM_{leaf} + DM_{petiole} \tag{5}</span></span></p>
 <p>In the model calculation the growth rate of <em>DM<sub>total</sub></em> is allocated to its components.</p>
@@ -214,7 +215,7 @@ T_{air} - T_{b} &amp; |~~T&gt;0\\
 <p><span id="eq-shoot-change"><span class="math display">\frac{dDM_{shoot}} {dt} = \frac{dDM_{total}} {dt} - \frac{dDM_{root}} {dt} - \frac{dDM_{dead}} {dt} \tag{9}</span></span></p>
 <p>To distribute the shoot dry matter into <em>DM<sub>leaf</sub></em> and <em>DM<sub>petiole</sub></em> an allometric relationship between <em>DM<sub>leaf</sub></em> and <em>DM<sub>petiole</sub></em> is assumed. The relative growth rates of <em>DM<sub>leaf</sub></em> and <em>DM<sub>petiole</sub></em> exhibit a constant ratio leading to a linear function between the natural logarithm of both fractions (<a href="#eq-fraction-petiole">Eq.&nbsp;10</a>).</p>
 <p><span id="eq-fraction-petiole"><span class="math display">\ln (DM_{petiole}) = f_{la} \cdot \ln (DM_{leaf}) + f_{lb} \tag{10}</span></span></p>
-<p>where <em>f<sub>la</sub></em> and <em>f<sub>lb</sub></em> [-] are regression coefficients. <em>f<sub>leaf</sub></em> can then be expressed as <span class="citation" data-cites="kage1999simple">(<a href="#ref-kage1999simple" role="doc-biblioref">H. Kage and Stützel, 1999b</a>)</span>. The growth rates of <em>DM<sub>leaf</sub></em> and <em>DM<sub>petiole</sub></em> are calculated from the growth rate of <em>DM<sub>shoot</sub></em> using <em>f<sub>leaf</sub></em>.</p>
+<p>where <em>f<sub>la</sub></em> and <em>f<sub>lb</sub></em> [-] are regression coefficients. <em>f<sub>leaf</sub></em> can then be expressed as <span class="citation" data-cites="kage1999simple">(<a href="#ref-kage1999simple" role="doc-biblioref">H. Kage and Stützel, 1999a</a>)</span>. The growth rates of <em>DM<sub>leaf</sub></em> and <em>DM<sub>petiole</sub></em> are calculated from the growth rate of <em>DM<sub>shoot</sub></em> using <em>f<sub>leaf</sub></em>.</p>
 <p><span id="eq-leaf-change"><span class="math display">\frac{dDM_{leaf}} {dt} = f_{leaf} \cdot \frac{dDM_{shoot}} {dt} \tag{11}</span></span></p>
 <p>and</p>
 <p><span id="eq-petiole-change"><span class="math display">\frac{dDM_{petiole}} {dt} = (1 - f_{leaf}) \cdot \frac{dDM_{shoot}} {dt} \tag{12}</span></span></p>
@@ -222,8 +223,8 @@ T_{air} - T_{b} &amp; |~~T&gt;0\\
 <p>The sugar growth rate <em>(S)</em> is calculated according to <span class="citation" data-cites="qi2005broom">Qi et al. (<a href="#ref-qi2005broom" role="doc-biblioref">2005</a>)</span> using a sugar partitioning coefficient <em>(SPC)</em>.</p>
 <p><span id="eq-sugar-partioning"><span class="math display">\frac{dS} {dt} = \frac{dDM_{total}} {dt} \cdot \left(\frac{SPC \cdot DM_{total}} {1 + SPC \cdot DM_{total}} \right) \tag{14}</span></span></p>
 </section>
-<section id="leaf-area-index-calculation" class="level3">
-<h3 class="anchored" data-anchor-id="leaf-area-index-calculation">Leaf area index calculation</h3>
+<section id="leaf-area-index-calculation" class="level2">
+<h2 class="anchored" data-anchor-id="leaf-area-index-calculation">Leaf area index calculation</h2>
 <p>To calculate the intercepted radiation the actual LAI is needed for Eq. 2. It is calculated from <em>DM<sub>leaf</sub></em> using the specific leaf area <em>(SLA)</em> [cm<sup>2</sup> g<sup>-1</sup>].</p>
 <p><span id="eq-LAI"><span class="math display">LAI = \frac{DM_{leaf} \cdot SLA} {10000} \tag{15}</span></span></p>
 <p>The <em>SLA</em> is calculated depending on three factors:</p>
@@ -247,37 +248,48 @@ T_{air} - T_{b} &amp; |~~T&gt;0\\
 <p><span id="eq-dm-dead"><span class="math display">DM_{dead} = \frac {LAI_s} {SLA_{dead}} \cdot 10000 \tag{20}</span></span></p>
 <p>where <em>SLA<sub>dead</sub></em> is the <em>SLA</em> of the senescent leaves.</p>
 </section>
-<section id="evapotranspiration" class="level3">
-<h3 class="anchored" data-anchor-id="evapotranspiration">Evapotranspiration</h3>
+<section id="evapotranspiration" class="level2">
+<h2 class="anchored" data-anchor-id="evapotranspiration">Evapotranspiration</h2>
 <p>The evapotranspiration module is based on the Penman-Monteith equation <span class="citation" data-cites="monteith2013principles">(<a href="#ref-monteith2013principles" role="doc-biblioref">Monteith and Unsworth, 2013</a>)</span>. This equation needs as input data global radiation [W m<sup>-2</sup>], wind speed [m s<sup>-1</sup>], saturation deficit [mbar] and daily mean temperature [°C] to calculate the potential evapotranspiration <em>(ET<sub>pot</sub>)</em> [mm d<sup>-1</sup>]. These required data are obtained from the model input weather data file. To calculate the aerodynamic resistance of the crop <em>(r<sub>a</sub>)</em> [s m<sup>-1</sup>] and the canopy resistance <em>(r<sub>c</sub>)</em> [s m<sup>-1</sup>] the crop height <em>(crop<sub>height</sub>)</em> [m] and the <em>LAI</em> are needed. Both values are provided by the plant growth module. Potential evapotranspiration is divided into potential evaporation <em>(E<sub>pot</sub>)</em> [mm d<sup>-1</sup>] and potential transpiration <em>(T<sub>pot</sub>)</em> [mm d<sup>-1</sup>]) plus interception <em>(I)</em> [mm d<sup>-1</sup>] according to the calculated amount of radiation reaching the soil surface relative to the total global radiation.</p>
 </section>
-<section id="soil-water" class="level3">
-<h3 class="anchored" data-anchor-id="soil-water">Soil water</h3>
+</section>
+<section id="soil-water" class="level1">
+<h1>Soil water</h1>
 <p>The soil water dynamics are simulated using a water content based solution of the Richards-equation. The soil is divided in different layers and for each layer the water content is calculated. <em>T<sub>pot</sub></em> as potential water uptake is distributed to the soil layers according to the root length density <em>(RLD)</em> [cm cm<sup>-3</sup>] in each layer. It is assumed, that the root length density decreases exponentially with soil depth <span class="citation" data-cites="kage2000simulation">(<a href="#ref-kage2000simulation" role="doc-biblioref">Kage, 2000</a>)</span>. The depth growth of the roots is linearly calculated depending on <em>T<sub>sum</sub></em> and a parameter <em>rd</em> [cm d<sup>-1</sup> °C], which describes the increase in rooting depth in relation to <em>T<sub>sum</sub></em>. <em>rd</em> was estimated using data presented by <span class="citation" data-cites="brown1985fibrous">Brown and Biscoe (<a href="#ref-brown1985fibrous" role="doc-biblioref">1985</a>)</span> and the measured water content values from experiment 1. The maximum rooting depth was assumed to be 150&nbsp;cm. The root depth growth ceases at temperatures &lt; 3&nbsp;°C. The actual water uptake from the soil layer is calculated from the potential uptake and a reduction function depending on the water content.</p>
 </section>
-<section id="additional-components-to-simulate-winter-sugar-beet" class="level3">
-<h3 class="anchored" data-anchor-id="additional-components-to-simulate-winter-sugar-beet">Additional components to simulate winter sugar beet</h3>
-<section id="leaf-loss-over-winter" class="level4">
-<h4 class="anchored" data-anchor-id="leaf-loss-over-winter">Leaf loss over winter</h4>
+<section id="additional-components-to-simulate-winter-sugar-beet" class="level1">
+<h1>Additional components to simulate winter sugar beet</h1>
+<section id="leaf-loss-over-winter" class="level2">
+<h2 class="anchored" data-anchor-id="leaf-loss-over-winter">Leaf loss over winter</h2>
 <p>Winter sugar beets can lose their leaves and petioles over winter due to frost, up to a total loss. According to an approach of <span class="citation" data-cites="muller2009remote">Müller (<a href="#ref-muller2009remote" role="doc-biblioref">2009</a>)</span>, negative mean daily temperatures &lt;-2°&nbsp;C are summed up <em>(TS<sub>min</sub>)</em> [°C]. The rate of shoot dry matter loss is estimated from the existing <em>DM<sub>shoot</sub></em>, the changing rate of <em>TS<sub>min</sub></em> and a factor for dry matter decrease <em>(LPL)</em> [-].</p>
 <p><span id="eq-dm-loss-over-winter"><span class="math display">\frac {dL_{Shoot}} {dt} = DM_{Shoot} \cdot \frac{dTS_{min}} {dt} \cdot LPL \tag{21}</span></span></p>
 <p>The dry matter loss rate is then used to calculate the change rate of <em>DM<sub>shoot</sub></em>. The minimum value for <em>DM<sub>shoot</sub></em> is 0.</p>
 <p><span id="eq-dm-shoot-change-over-winter"><span class="math display">\frac{dDM_{Shoot}} {dt} = \frac{dDM_{tot}} {dt} - \frac{dDM_{root}} {dt} - \frac{dL_{Shoot}} {dt} \tag{22}</span></span></p>
 <p>A new initialization of the <em>LAI</em> is necessary, if <em>DM<sub>leaf</sub></em> is 0. Therefore in spring an initial LAI of 0.025 is assumed if the temperature is &gt;<em>T<sub>b</sub></em> and <em>LAI</em> &lt; 0.025, simulating a regrowth from stored assimilates within the beet.</p>
 </section>
-<section id="vernalisation" class="level4">
-<h4 class="anchored" data-anchor-id="vernalisation">Vernalisation</h4>
+<section id="vernalisation" class="level2">
+<h2 class="anchored" data-anchor-id="vernalisation">Vernalisation</h2>
 <p>Vernalisation was estimated using a modification of the model of <span class="citation" data-cites="milford2010vernalization">Milford et al. (<a href="#ref-milford2010vernalization" role="doc-biblioref">2010</a>)</span>. To be able to use daily weather data, the original model working on an hourly basis was converted to a daily basis with mean daily temperature. The daily vernalisation rate is calculated as a value between 0 and 1 depending on <em>T<sub>air</sub></em> (Fig. 1). The vernalisation values of each day are added until the sum required for fully vernalising the sugar beet was accomplished. Vernalising temperatures are commonly assumed to range between 1–12&nbsp;°C with an optimum between 6–8°&nbsp;C <span class="citation" data-cites="jaggard1983effects milford2010vernalization">(<a href="#ref-jaggard1983effects" role="doc-biblioref">Jaggard et al., 1983</a>; <a href="#ref-milford2010vernalization" role="doc-biblioref">Milford et al., 2010</a>)</span>. Data about the absolute vernalisation requirement of sugar beet are still scarce. In a climate chamber experiment with sugar beets, <span class="citation" data-cites="mutasa2010bolting">Mutasa-Göttgens et al. (<a href="#ref-mutasa2010bolting" role="doc-biblioref">2010</a>)</span> used a temperature regime of 8&nbsp;°C for 9 days, 6–8&nbsp;°C for the following 18 days and a 7-day thermal buffer period at 15&nbsp;°C as vernalisation (all in one 32 days) whereas <span class="citation" data-cites="crosthwaite1993role">Crosthwaite and Jenkins (<a href="#ref-crosthwaite1993role" role="doc-biblioref">1993</a>)</span> proposed 6–11&nbsp;°C with 8 hours of light for 3 month. Testing the vernalisation requirement of Beta vulgaris spp. maritima from different populations across France and Belgium <span class="citation" data-cites="boudry2002vernalization">Boudry et al. (<a href="#ref-boudry2002vernalization" role="doc-biblioref">2002</a>)</span> used 5–7&nbsp;°C for 60 days to vernalise the beets. We assumed temperatures of 5–7&nbsp;°C for 60 days to be sufficient to fully meet the vernalisation requirement of sugar beets.</p>
 </section>
-<section id="assumptions-for-non-bolting-winter-beet" class="level4">
-<h4 class="anchored" data-anchor-id="assumptions-for-non-bolting-winter-beet">Assumptions for non-bolting winter beet</h4>
+<section id="assumptions-for-non-bolting-winter-beet" class="level2">
+<h2 class="anchored" data-anchor-id="assumptions-for-non-bolting-winter-beet">Assumptions for non-bolting winter beet</h2>
 <p>As no non-bolting winter beet variety exists at present, it is assumed that the growing phase in autumn/winter can be simulated according to bolting winter beet. After reaching full vernalisation the beet follows the growth pattern of conventional sugar beet in spring.</p>
+</section>
+</section>
+<section id="implementation" class="level1">
+<h1>Implementation</h1>
+<p>The model was implemented using an object oriented component library termed HUME <span class="citation" data-cites="kage1999">(<a href="#ref-kage1999" role="doc-biblioref">H. Kage and Stützel, 1999b</a>)</span> on the basis of Embarcadero® Delphi® 2010 (Embarcadero Technologies, Inc., USA). The model is comprised of submodels describing plant growth and development, soil water dynamics, and evapotranspiration.</p>
+</section>
+<section id="miscellaneous" class="level1">
+<h1>Miscellaneous</h1>
+<p>Temperature depended processes are calculated generally using an effective temperature <em>(T<sub>eff</sub>)</em> [°C], which is the mean daily air temperature [°C] <em>(T<sub>air</sub>)</em> minus a base temperature <em>(T<sub>b</sub> =&nbsp;3&nbsp;°C)</em> (<a href="#eq-effective-temperature">Eq.&nbsp;23</a>), which is the limit for growing processes in sugar beet <span class="citation" data-cites="milford1985analysis">(<a href="#ref-milford1985analysis" role="doc-biblioref">Milford et al., 1985</a>)</span>.</p>
+<p><span id="eq-effective-temperature"><span class="math display">T_{eff}  = \begin{cases}
+T_{air} - T_{b} &amp; |~~T&gt;0\\
+0 &amp; |~~T&lt;3
+\end{cases} \tag{23}</span></span></p>
 
 
 
-</section>
-</section>
-</section>
 </section>
 
 <div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" role="list">
@@ -309,10 +321,10 @@ Jaggard, K., Wickens, R., Webb, D., Scott, R., 1983. Effects of sowing date on p
 Kage, H., 2000. Simulation modelling for improving nitrogen use efficiency in intensive cropping systems (PhD thesis). Hannover, Univ., Habil.-Schr., 2001.
 </div>
 <div id="ref-kage1999" class="csl-entry" role="listitem">
-Kage, H., Stützel, H., 1999a. HUME: An object oriented component library for generic modular modelling of dynamic systems. Symp. Eur. Soc. Agron. Spain.
+Kage, H., Stützel, H., 1999b. HUME: An object oriented component library for generic modular modelling of dynamic systems. Symp. Eur. Soc. Agron. Spain.
 </div>
 <div id="ref-kage1999simple" class="csl-entry" role="listitem">
-Kage, H., Stützel, H., 1999b. A simple empirical model for predicting development and dry matter partitioning in cauliflower (brassica oleracea l. botrytis). Scientia horticulturae 80, 19–38.
+Kage, H., Stützel, H., 1999a. A simple empirical model for predicting development and dry matter partitioning in cauliflower (brassica oleracea l. botrytis). Scientia horticulturae 80, 19–38.
 </div>
 <div id="ref-kenter2006effects" class="csl-entry" role="listitem">
 Kenter, C., Hoffmann, C.M., Märländer, B., 2006. Effects of weather variables on sugar beet yield development (beta vulgaris l.). European Journal of Agronomy 24, 62–69.
@@ -325,6 +337,12 @@ Milford, G., Pocock, T., Riley, J., 1985. An analysis of leaf growth in sugar be
 </div>
 <div id="ref-milford1980effects" class="csl-entry" role="listitem">
 Milford, G., Riley, J., 1980. The effects of temperature on leaf growth of sugar beet varieties. Annals of Applied Biology 94, 431–443.
+</div>
+<div id="ref-monsi2004" class="csl-entry" role="listitem">
+Monsi, M., Saeki, T., 2005. <span class="nocase">On the Factor Light in Plant Communities and its Importance for Matter Production</span>. Annals of Botany 95, 549–567. <a href="https://doi.org/10.1093/aob/mci052">https://doi.org/10.1093/aob/mci052</a>
+</div>
+<div id="ref-climate1977" class="csl-entry" role="listitem">
+Monteith, J.L., 1977. Climate and the efficiency of crop production in britain. Philosophical transactions of the royal society of London. B, Biological Sciences 281, 277–294.
 </div>
 <div id="ref-monteith2013principles" class="csl-entry" role="listitem">
 Monteith, J., Unsworth, M., 2013. Principles of environmental physics: Plants, animals, and the atmosphere. Academic Press.
